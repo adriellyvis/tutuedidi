@@ -1,0 +1,628 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: #16110e;
+    background-image: radial-gradient(circle at center, #3b2a20 0%, #120d0a 85%);
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    overflow: hidden;
+    user-select: none;
+    padding: 15px;
+    position: relative;
+}
+
+/* Partículas de poeira flutuando no ambiente */
+.ambient-dust {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+
+.dust-speck {
+    position: absolute;
+    background: radial-gradient(circle, rgba(235, 200, 125, 0.75) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: floatDust linear infinite;
+}
+
+@keyframes floatDust {
+    0% {
+        transform: translateY(0) translateX(0);
+        opacity: 0;
+    }
+    25% {
+        opacity: 0.7;
+    }
+    75% {
+        opacity: 0.5;
+    }
+    100% {
+        transform: translateY(-120px) translateX(25px);
+        opacity: 0;
+    }
+}
+
+/* Cena 3D */
+.scene {
+    perspective: 2200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    flex: 1;
+    z-index: 2;
+}
+
+/* Estrutura do Livro */
+.book {
+    position: relative;
+    width: 460px;
+    height: 630px;
+    transition: transform 0.65s cubic-bezier(0.25, 1, 0.5, 1);
+    transform-style: preserve-3d;
+}
+
+/* Efeito de bloco de páginas empilhadas aparecendo na borda direita e inferior quando fechado */
+.book::after {
+    content: "";
+    position: absolute;
+    top: 4px;
+    right: -10px;
+    width: 10px;
+    height: calc(100% - 8px);
+    background: repeating-linear-gradient(
+        to right,
+        #e8dcc4 0px,
+        #cbb998 1px,
+        #f2e8d5 2px
+    );
+    border-radius: 0 4px 4px 0;
+    box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.6);
+    transform: translateZ(-2px);
+    transition: opacity 0.4s ease;
+}
+
+.book.is-open::after {
+    opacity: 0;
+}
+
+/* Cada folha possui frente e verso */
+.paper {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    transform-origin: left center;
+    transition: transform 0.85s cubic-bezier(0.645, 0.045, 0.355, 1);
+    transform-style: preserve-3d;
+    cursor: pointer;
+}
+
+.front, .back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    backface-visibility: hidden;
+    border-radius: 3px 14px 14px 3px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.65);
+    overflow: hidden;
+}
+
+/* Textura de Papel Antigo */
+.front:not(.cover), .back:not(.back-cover) {
+    background-color: #f4ecd8;
+    background-image: 
+        radial-gradient(rgba(139, 105, 65, 0.14) 1px, transparent 0),
+        linear-gradient(to right, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.03) 6%, transparent 20%);
+    background-size: 20px 20px, 100% 100%;
+    color: #2c221a;
+    border: 1px solid #d5c7a9;
+}
+
+.back {
+    transform: rotateY(180deg);
+    border-radius: 14px 3px 3px 14px;
+    background-image: 
+        radial-gradient(rgba(139, 105, 65, 0.14) 1px, transparent 0),
+        linear-gradient(to left, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.03) 6%, transparent 20%);
+}
+
+.paper.flipped {
+    transform: rotateY(-180deg);
+}
+
+/* =========================================================
+   CAPA REALISTA EM COURO VINTAGE COM TEXTURA E RELEVO
+   ========================================================= */
+.cover, .back-cover {
+    background-color: #3a1410;
+    background-image:
+        /* Textura granulada de couro usando SVG inline */
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='leather'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23leather)' opacity='0.11'/%3E%3C/svg%3E"),
+        /* Iluminação radial e vinheta nas bordas do couro */
+        radial-gradient(circle at 45% 40%, #521d17 0%, #2a0c09 85%, #1c0705 100%);
+    color: #e5c37b;
+    padding: 24px 24px 24px 34px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 2px solid #1f0806;
+    box-shadow: 
+        inset 14px 0 22px rgba(0, 0, 0, 0.75),
+        inset -2px 0 6px rgba(255, 220, 160, 0.12),
+        0 20px 45px rgba(0, 0, 0, 0.8);
+    transition: transform 0.3s ease;
+}
+
+.cover:hover {
+    box-shadow: 
+        inset 14px 0 22px rgba(0, 0, 0, 0.75),
+        inset -2px 0 8px rgba(255, 220, 160, 0.2),
+        0 24px 55px rgba(0, 0, 0, 0.85);
+}
+
+.back-cover {
+    border-radius: 14px 3px 3px 14px;
+    padding: 24px 34px 24px 24px;
+}
+
+/* Brilho suave que acompanha o mouse sobre o couro */
+.cover-sheen {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(circle 220px at 50% 50%, rgba(255, 225, 165, 0.09), transparent 80%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 1;
+}
+
+.cover:hover .cover-sheen {
+    opacity: 1;
+}
+
+/* Vincos verticais da lombada do livro */
+.spine-creases {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 24px;
+    height: 100%;
+    background: linear-gradient(
+        to right,
+        rgba(0, 0, 0, 0.65) 0%,
+        rgba(255, 255, 255, 0.06) 35%,
+        rgba(0, 0, 0, 0.55) 60%,
+        rgba(255, 255, 255, 0.05) 75%,
+        transparent 100%
+    );
+    border-right: 1px solid rgba(0, 0, 0, 0.45);
+    pointer-events: none;
+    z-index: 2;
+}
+
+.cover-border {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border: 1.5px solid rgba(209, 168, 86, 0.75);
+    outline: 1px solid rgba(209, 168, 86, 0.35);
+    outline-offset: -7px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 26px 24px;
+    z-index: 3;
+}
+
+/* Cantoneiras ornamentais nos 4 cantos */
+.corner {
+    position: absolute;
+    font-size: 1.45rem;
+    color: #d4aa54;
+    opacity: 0.85;
+    line-height: 1;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
+
+.corner.top-left {
+    top: 10px;
+    left: 12px;
+}
+
+.corner.top-right {
+    top: 10px;
+    right: 12px;
+    transform: scaleX(-1);
+}
+
+.corner.bottom-left {
+    bottom: 10px;
+    left: 12px;
+    transform: scaleY(-1);
+}
+
+.corner.bottom-right {
+    bottom: 10px;
+    right: 12px;
+    transform: scale(-1, -1);
+}
+
+.subtitle {
+    font-size: 0.74rem;
+    letter-spacing: 3.2px;
+    color: #d8b874;
+    opacity: 0.9;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+
+/* Título com efeito Hot Stamping (ouro prensado no couro) */
+.gold-foil {
+    font-size: 3.4rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    line-height: 1.08;
+    background: linear-gradient(
+        180deg,
+        #fff0c2 0%,
+        #e5be6b 45%,
+        #b88835 85%,
+        #f2d184 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0px 2px 3px rgba(0, 0, 0, 0.85));
+}
+
+.divider {
+    font-size: 1.2rem;
+    margin: 10px 0;
+    color: #d4aa54;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.7);
+}
+
+.cover-desc {
+    font-size: 1.15rem;
+    font-style: italic;
+    line-height: 1.45;
+    color: #ebd6a7;
+    max-width: 290px;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.7);
+}
+
+/* =========================================================
+   POLAROID NA CAPA
+   ========================================================= */
+.cover-polaroid {
+    margin: 18px auto 14px auto;
+    width: 195px;
+    padding: 8px 8px 20px 8px;
+    background: #fbf7ee;
+    border: 1px solid #d9cbb3;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.65);
+    transform: rotate(-2.5deg);
+    transition: transform 0.35s ease;
+}
+
+.cover:hover .cover-polaroid {
+    transform: rotate(0deg) scale(1.03);
+}
+
+.cover-polaroid img {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+    display: block;
+    background-color: #e6dcc8;
+    filter: sepia(25%) contrast(98%);
+}
+
+.cover-polaroid .caption {
+    display: block;
+    font-family: 'Reenie Beanie', cursive;
+    font-size: 1.35rem;
+    color: #3a2e25;
+    margin-top: 5px;
+    line-height: 1;
+}
+
+.hint {
+    margin-top: 10px;
+    font-size: 0.85rem;
+    letter-spacing: 1.2px;
+    color: #d4aa54;
+    animation: pulse 2.2s infinite;
+}
+
+/* =========================================================
+   CONTEÚDO INTERNO DAS PÁGINAS
+   ========================================================= */
+.page-content {
+    padding: 42px 38px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.chapter {
+    font-size: 0.78rem;
+    letter-spacing: 3px;
+    color: #8c6b4a;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.page-content h2 {
+    font-size: 1.9rem;
+    color: #3a2315;
+    border-bottom: 1px solid #cbb994;
+    padding-bottom: 10px;
+    margin-bottom: 18px;
+}
+
+.page-content p {
+    font-size: 1.18rem;
+    line-height: 1.65;
+    margin-bottom: 15px;
+    text-align: justify;
+}
+
+/* Estilo Polaroid geral */
+.polaroid {
+    background: #fffdf9;
+    padding: 10px 10px 26px 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.22);
+    transform: rotate(-2deg);
+    margin: auto;
+    width: 240px;
+    text-align: center;
+    border: 1px solid #e0d6c3;
+}
+
+.polaroid img {
+    width: 100%;
+    height: 155px;
+    object-fit: cover;
+    filter: sepia(35%) contrast(95%);
+}
+
+.polaroid .caption {
+    display: block;
+    font-family: 'Reenie Beanie', cursive;
+    font-size: 1.45rem;
+    color: #3a2e25;
+    margin-top: 6px;
+}
+
+.cover-polaroid {
+    margin: 18px auto 14px auto;
+    width: 195px;
+    padding: 8px 8px 20px 8px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.65);
+}
+
+.cover-polaroid img {
+    height: 140px;
+    filter: sepia(25%) contrast(98%);
+}
+
+.cover-polaroid .caption {
+    font-size: 1.35rem;
+    margin-top: 5px;
+}
+
+/* Citação e Lista */
+.quote {
+    margin: auto 0;
+    padding: 16px 22px;
+    border-left: 3px solid #8c6b4a;
+    background: rgba(140, 107, 74, 0.08);
+    font-style: italic;
+    font-size: 1.2rem;
+    color: #4a3525;
+}
+
+.vintage-list {
+    margin: 10px 0 20px 20px;
+    font-size: 1.14rem;
+    line-height: 1.6;
+}
+
+.vintage-list li {
+    margin-bottom: 12px;
+}
+
+/* Assinatura manuscrita */
+.signature-box {
+    margin-top: auto;
+    margin-bottom: 28px;
+    text-align: right;
+}
+
+.signature-box p {
+    text-align: right;
+    margin-bottom: 2px;
+    font-style: italic;
+}
+
+.signature {
+    font-family: 'Reenie Beanie', cursive;
+    font-size: 2.5rem;
+    color: #2b1d14;
+}
+
+.page-number {
+    position: absolute;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.92rem;
+    color: #8c6b4a;
+    letter-spacing: 2px;
+}
+
+/* Selo de Cera na Contracapa */
+.wax-seal {
+    width: 80px;
+    height: 80px;
+    background: radial-gradient(circle at 30% 30%, #b82921, #75120d);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2.1rem;
+    font-weight: bold;
+    color: #e5c37b;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.6), inset 0 0 8px rgba(0,0,0,0.5);
+    border: 3px dashed #8f1b14;
+    margin-bottom: 20px;
+}
+
+.back-text {
+    font-size: 1.25rem;
+    font-style: italic;
+    line-height: 1.6;
+    margin-bottom: 25px;
+}
+
+/* Botões e Indicador */
+.controls {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    z-index: 10;
+}
+
+.page-indicator {
+    color: #c59b47;
+    font-size: 0.95rem;
+    letter-spacing: 1.5px;
+    min-width: 110px;
+    text-align: center;
+}
+
+button {
+    background: rgba(229, 195, 123, 0.1);
+    color: #e5c37b;
+    border: 1px solid rgba(197, 155, 71, 0.7);
+    padding: 10px 22px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+button:hover, button:active {
+    background: #c59b47;
+    color: #1c1613;
+}
+
+/* Esconde suavemente o botão Anterior na capa e Próxima no fim */
+.hidden-btn {
+    opacity: 0;
+    pointer-events: none;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.45; }
+    50% { opacity: 0.95; }
+}
+
+/* =========================================================
+   RESPONSIVIDADE INTELIGENTE (TELAS MENORES E CELULARES)
+   ========================================================= */
+@media (max-width: 980px) {
+    .book {
+        width: 88vw;
+        max-width: 410px;
+        height: 72dvh;
+        max-height: 580px;
+    }
+
+    .gold-foil {
+        font-size: 2.6rem;
+    }
+
+    .cover-desc {
+        font-size: 1.05rem;
+    }
+
+    .cover-polaroid {
+        width: 155px;
+        padding: 6px 6px 16px 6px;
+        margin: 12px auto 10px auto;
+    }
+
+    .cover-polaroid img {
+        height: 105px;
+    }
+
+    .cover-polaroid .caption {
+        font-size: 1.15rem;
+    }
+
+    .page-content {
+        padding: 28px 24px;
+    }
+
+    .page-content h2 {
+        font-size: 1.55rem;
+        margin-bottom: 12px;
+    }
+
+    .page-content p {
+        font-size: 1.05rem;
+        line-height: 1.55;
+        margin-bottom: 12px;
+    }
+
+    .polaroid:not(.cover-polaroid) {
+        width: 195px;
+        padding: 8px 8px 20px 8px;
+    }
+
+    .polaroid:not(.cover-polaroid) img {
+        height: 120px;
+    }
+
+    .quote {
+        font-size: 1.05rem;
+        padding: 12px 15px;
+    }
+
+    .vintage-list {
+        font-size: 1.02rem;
+    }
+
+    .controls {
+        gap: 12px;
+    }
+
+    button {
+        padding: 9px 14px;
+        font-size: 0.95rem;
+    }
+}
